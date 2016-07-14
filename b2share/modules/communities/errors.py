@@ -39,3 +39,7 @@ class CommunityDoesNotExistError(Exception):
 class CommunityDeletedError(Exception):
     """Exception raised when a requested community is marked as deleted."""
     pass
+
+class GetAllStartStopError(Exception):
+    """Exception raised when Communities.get_all is called with one of start or stop parameters being none"""
+    pass

@@ -91,12 +91,21 @@ class Community(object):
     @classmethod
     # TODO: change this into a search function, not just a list of communities
     # TODO: a query should be given
-    def get_all(cls, start, stop):
+    def get_all(cls, start=None, stop=None):
         """Searches for matching communities."""
-        start = int(start)
-        stop = int(stop)
         from .models import Community as CommunityMeta
-        metadata = CommunityMeta.query.order_by(CommunityMeta.created).limit(stop)[start:]
+        if (start==None and stop==None):
+            metadata = CommunityMeta.query.order_by(CommunityMeta.created)
+        elif (start and stop):
+            try:
+                start = int(start)
+                stop = int(stop)
+            except ValueError as e:
+                raise GetAllStartStopError("start and stop parameters must be numbers")
+            metadata = CommunityMeta.query.order_by(CommunityMeta.created).limit(stop)[start:]
+        else:
+            #one of them is None this cannot happen
+            raise GetAllStartStopError("Neither or both start and stop should be None")    
         return [cls(md) for md in metadata]
 
     @classmethod
