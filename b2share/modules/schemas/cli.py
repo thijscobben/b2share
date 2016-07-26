@@ -81,15 +81,23 @@ def add_schema(verbose,community,schema_file):
         community_schema_dict = json.loads(community_schema)
     except json.JSONDecodeError as e:
         raise click.ClickException("%s is not a valid JSON file" % schema_file)
-    block_schemas = community_schema_dict['block_schemas']
+    try:
+        block_schemas = community_schema_dict['block_schemas']
+    except KeyError:
+        raise click.Exception("schema file does not contain one or more block_schemas element(s)")
     for key in block_schemas.keys():
         if verbose:
             click.echo(" checking block schema %s for community_schema file %s" % (key, schema_file))
-        versions = block_schemas[key]['versions']
+        try:
+            versions = block_schemas[key]['versions']
+        except KeyError:
+            raise click.Exception("Block schema does not contain a versions element")
         if verbose:
             click.echo("Versions: %d" % len(versions))
         try:
             validate(versions[0],restricted_metaschema)
         except JSONDecodeError as e:
-            #raise click.ClickException(str(e))
-            click.echo('testing')
+            raise click.ClickException(str(e))
+    #if we got to this point we may assume a valid community and a valid metadata-schema file
+    #now save the schema to the community as a new version
+            
