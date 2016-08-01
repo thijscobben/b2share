@@ -85,7 +85,9 @@ def block_schema_add(verbose, community, name):
 @click.option('-c','--community', help='show only block schemas filtered by maintaining community id or name')
 def block_schema_list(community):
     """Lists all block schemas for this b2share instance (filtered for a community)."""
-    comm = get_community_by_name_or_id(community)
+    comm = None
+    if community:
+        comm = get_community_by_name_or_id(community)
     community_id = None
     if comm:
         community_id = comm.id
@@ -96,5 +98,5 @@ def block_schema_list(community):
     click.secho("BLOCK SCHEMA ID\t\t\t\tNAME\t\tMAINTAINER\tDEPRECATED\t#VERSIONS")
     for bs in block_schemas:
         bs_comm = Community.get(id=bs.community)
-        click.secho("%s\t%s\t%s\t\t%s\t\t%d" % (bs.id,bs.name[0:15], bs_comm.name[0:15], bs.deprecated, len(bs.versions)  ))
+        click.secho("%s\t%s\t%s\t%s\t\t%d" % (bs.id,bs.name[0:15].ljust(15), bs_comm.name[0:15].ljust(15), bs.deprecated, len(bs.versions)  ))
         
