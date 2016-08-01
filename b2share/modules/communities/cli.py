@@ -66,7 +66,8 @@ def create(verbose, name, description, logo):
     try:
         community = Community.create_community(name=name,description=description,logo=logo)
         db.session.commit()
-        click.echo("Community created with %d" % community.id)
+        if verbose:
+            click.echo("Community created with %d" % community.id)
     except Exception as e1:
         try:
             db.session.rollback()

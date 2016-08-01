@@ -33,13 +33,16 @@ import os
 
 from flask_cli import with_appcontext
 
+from invenio_db import db
+
 from .errors import RootSchemaAlreadyExistsError
 from .helpers import load_root_schemas
 from .validate import restricted_metaschema
+from .api import BlockSchema
 
 from b2share.modules.communities.api import Community, CommunityDoesNotExistError
 from b2share.modules.communities.cli import communities
-
+from b2share.modules.communities.helpers import get_community_by_name_or_id
 
 
 @click.group()
@@ -57,47 +60,41 @@ def init(verbose):
     except RootSchemaAlreadyExistsError as e:
         raise click.ClickException(str(e))
 
-
-@communities.command()
+            
+@schemas.command()
 @with_appcontext
 @click.option('-v','--verbose', is_flag=True, default=False)
 @click.argument('community')
-#help='path to the metadata-schema file to add for this community', help='id or name of the community to add the metadata-schema for')
-@click.argument('schema_file')
-def add_schema(verbose,community,schema_file):
-    """Adds a new version of a metadata schema for a community"""
+@click.argument('name')
+def block_schema_add(verbose, community, name):
+    """Adds a block schema to the database. Community is the ID or NAME of the maintaining community for this block schema. Name is the name as displayed in block_schema_list command."""
+    if verbose:
+        click.secho("Creating block schema with name %s to be maintained by community %s" % (name, community))
+    comm = get_community_by_name_or_id(community)
+    if not comm:
+        raise click.BadParameter("There is no community by this name or ID: %s" % community)
+    if len(name)>255:
+        raise click.BadParameter("NAME parameter is longer than the 255 character maximum")
+    block_schema = BlockSchema.create_block_schema(comm.id, name)
+    db.session.commit()
+    if verbose:
+        click.secho("Created block schema with name %s and id %s" % (name, block_schema.id))
+
+@schemas.command()
+@with_appcontext
+@click.option('-c','--community', help='show only block schemas filtered by maintaining community id or name')
+def block_schema_list(community):
+    """Lists all block schemas for this b2share instance (filtered for a community)."""
+    comm = get_community_by_name_or_id(community)
+    community_id = None
+    if comm:
+        community_id = comm.id
     try:
-        fetched_community = Community.get(id=community)
-    except:
-        try:
-            fetched_community = Community.get(name=community)
-        except CommunityDoesNotExistError:
-            raise click.BadParameter("No community exists by the name or ID %s" % community)
-    if not(os.path.isfile(schema_file)):
-        raise click.ClickException("schema_file argument should point to a file")
-    with open(schema_file,'r') as f:
-        community_schema = f.read().replace('\n','')
-    try:
-        community_schema_dict = json.loads(community_schema)
-    except json.JSONDecodeError as e:
-        raise click.ClickException("%s is not a valid JSON file" % schema_file)
-    try:
-        block_schemas = community_schema_dict['block_schemas']
-    except KeyError:
-        raise click.Exception("schema file does not contain one or more block_schemas element(s)")
-    for key in block_schemas.keys():
-        if verbose:
-            click.echo(" checking block schema %s for community_schema file %s" % (key, schema_file))
-        try:
-            versions = block_schemas[key]['versions']
-        except KeyError:
-            raise click.Exception("Block schema does not contain a versions element")
-        if verbose:
-            click.echo("Versions: %d" % len(versions))
-        try:
-            validate(versions[0],restricted_metaschema)
-        except JSONDecodeError as e:
-            raise click.ClickException(str(e))
-    #if we got to this point we may assume a valid community and a valid metadata-schema file
-    #now save the schema to the community as a new version
-            
+        block_schemas = BlockSchema.get_all_block_schemas(community_id=community_id)
+    except BlockSchemaDoesNotExistError:
+         raise click.ClickException("No block schemas found, community parameter was: %s" % community)
+    click.secho("BLOCK SCHEMA ID\t\t\t\tNAME\t\tMAINTAINER\tDEPRECATED\t#VERSIONS")
+    for bs in block_schemas:
+        bs_comm = Community.get(id=bs.community)
+        click.secho("%s\t%s\t%s\t\t%s\t\t%d" % (bs.id,bs.name[0:15], bs_comm.name[0:15], bs.deprecated, len(bs.versions)  ))
+        
