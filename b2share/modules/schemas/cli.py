@@ -38,7 +38,7 @@ from invenio_db import db
 
 from .errors import RootSchemaAlreadyExistsError, BlockSchemaDoesNotExistError
 from .helpers import load_root_schemas
-from .validate import restricted_metaschema
+from .validate import validate_metadata_schema
 from .api import BlockSchema
 
 from b2share.modules.communities.api import Community, CommunityDoesNotExistError
@@ -135,4 +135,33 @@ def block_schema_edit(verbose, name, community, deprecated, block_schema_id):
     block_schema.update(data)
     db.session.commit()
         
-    
+@schemas.command()
+@with_appcontext
+@click.option('-v','--verbose', is_flag=True, default=False)
+@click.argument('block_schema_id')
+@click.argument('json_file')
+def block_schema_create_version(verbose, block_schema_id, json_file):
+    """Assign a json-schema file conforming to the EUDAT block-schema part of the root-schema that defines metadata format for this block schema. Upon success, this creates a new version, the old versions are maintained and can be obtained by block_schema_list_versions subcommand."""
+    try:
+        val = UUID(block_schema_id, version=4)
+    except ValueError:
+        raise click.BadParameter("BLOCK_SCHEMA_ID is not a valid UUID (hexadecimal numbers and dashes e.g. fa52bec3-a847-4602-8af5-b8d41a5215bc )")
+    try:
+        block_schema = BlockSchema.get_block_schema(schema_id=block_schema_id)
+    except BlockSchemaDoesNotExistError:
+        raise click.BadParameter("No block_schema with id %s" % block_schema_id)
+    if not os.path.isfile(json_file):
+        raise click.ClickException("%s does not exist on the filesystem" % json_file)
+    f = open(json_file,'r')
+    schema_dict = {}
+    try:
+        schema_dict = json.load(f)
+    except json.decoder.JSONDecodeError:
+        raise click.ClickException("%s is not valid JSON" % json_file)
+    try:
+        validate_metadata_schema(schema_dict)
+    except:
+        raise click.ClickException("%s is not a valid metadata schema for EUDAT community metadata format" % json_file)
+    block_schema_version = block_schema.create_version(schema_dict)
+    db.session.commit()
+    click.secho("Block schema version %d created for block schema %s" % (block_schema_version.version, block_schema.name))

@@ -118,17 +118,4 @@ def edit(verbose, id, name, description, logo,clear_fields):
         db.session.commit()
         click.echo("Community %s updated: name= %s description=%s logo=%s" % (updated_community.id, updated_community.name, updated_community.description, updated_community.logo))
 
-#TODO final decision on whether the delete command should be implemented    
-#@communities.command()
-#@with_appcontext
-#@click.option('-v','--verbose',is_flag=True,default=False)
-#@click.option('--yes-i-know',is_flag=True,default=False)
-#@click.argument('id')
-#def delete(verbose, yes-i-know, id):
-#    """CLI command to delete a community from the database."""
-    
-#@communities.command()
-#def add_schema_version(verbose,id):   
-#def list_versions_for_community
-#def add_for_community
-#NOTE: The above commands are implemented in the schemas module        
+ 
