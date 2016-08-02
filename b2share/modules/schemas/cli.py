@@ -30,12 +30,13 @@ import click
 import json
 from jsonschema import validate
 import os
+from uuid import UUID
 
 from flask_cli import with_appcontext
 
 from invenio_db import db
 
-from .errors import RootSchemaAlreadyExistsError
+from .errors import RootSchemaAlreadyExistsError, BlockSchemaDoesNotExistError
 from .helpers import load_root_schemas
 from .validate import restricted_metaschema
 from .api import BlockSchema
@@ -100,3 +101,38 @@ def block_schema_list(community):
         bs_comm = Community.get(id=bs.community)
         click.secho("%s\t%s\t%s\t%s\t\t%d" % (bs.id,bs.name[0:15].ljust(15), bs_comm.name[0:15].ljust(15), bs.deprecated, len(bs.versions)  ))
         
+@schemas.command()
+@with_appcontext
+@click.option('-v','--verbose', is_flag=True, default=False)
+@click.option('-n','--name',help='set the name of the community')
+@click.option('-c','--community',help='set the maintaining community by name or id')
+@click.option('-d','--deprecated',help='(un)set deprecated bit, 1 is deprecated, 0 is not deprecated')
+@click.argument('block_schema_id')
+def block_schema_edit(verbose, name, community, deprecated, block_schema_id):
+    try:
+        val = UUID(block_schema_id, version=4)
+    except ValueError:
+        raise click.BadParameter("BLOCK_SCHEMA_ID is not a valid UUID (hexadecimal numbers and dashes e.g. fa52bec3-a847-4602-8af5-b8d41a5215bc )")
+    try:
+        block_schema = BlockSchema.get_block_schema(schema_id=block_schema_id)
+    except BlockSchemaDoesNotExistError:
+        raise click.BadParameter("No block_schema with id %s" % block_schema_id)
+    if not(name or community or deprecated):
+        raise click.ClickException("Noting to edit - at least one of name, community or deprecated must be provided.")
+    data = {}
+    if name:
+        data['name'] = name
+    if community:
+        comm = get_community_by_name_or_id(community)
+        if comm:
+            data['community'] = comm.id
+        else:
+            click.secho("Community not changed : no community exists with name or id: %s" % community)
+    if deprecated:
+        if not type(deprecated)==bool:
+            raise click.BadParameter("Deprecated should be True or False starting with a capital")
+        data['deprecated'] = deprecated
+    block_schema.update(data)
+    db.session.commit()
+        
+    
