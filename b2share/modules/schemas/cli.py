@@ -45,6 +45,10 @@ from b2share.modules.communities.api import Community, CommunityDoesNotExistErro
 from b2share.modules.communities.cli import communities
 from b2share.modules.communities.helpers import get_community_by_name_or_id
 
+from b2share.modules.communities.api import Community, CommunityDoesNotExistError
+from b2share.modules.communities.cli import communities
+
+
 
 @click.group()
 def schemas():
@@ -165,3 +169,4 @@ def block_schema_create_version(verbose, block_schema_id, json_file):
     block_schema_version = block_schema.create_version(schema_dict)
     db.session.commit()
     click.secho("Block schema version %d created for block schema %s" % (block_schema_version.version, block_schema.name))
+

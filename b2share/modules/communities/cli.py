@@ -118,4 +118,3 @@ def edit(verbose, id, name, description, logo,clear_fields):
         db.session.commit()
         click.echo("Community %s updated: name= %s description=%s logo=%s" % (updated_community.id, updated_community.name, updated_community.description, updated_community.logo))
 
- 
