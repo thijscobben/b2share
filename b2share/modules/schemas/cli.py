@@ -275,13 +275,8 @@ def community_schema_add_block_schema_version(verbose, community, block_schema_i
         community_schema_dict['additionalProperties'] = "false"
     else:
         community_schema_dict = json.loads(community_schema.community_schema)
-        click.secho("Hier is het:")
-        click.secho(str(community_schema_dict))
         community_schema_dict['properties'][str(block_schema_id)]={'$ref':version_url}
     #save
-    if verbose:
-        click.secho("Dictionary:")
-        click.secho(str(type(community_schema_dict)))
     CommunitySchema.create_version(comm.id, community_schema_dict)
     db.session.commit()
     community_schema = CommunitySchema.get_community_schema(comm.id)
