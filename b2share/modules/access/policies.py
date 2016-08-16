@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EUDAT B2Share.
-# Copyright (C) 2016 CERN.
+# Copyright (C) 2016, University of Tuebingen, CERN.
 #
 # B2Share is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -21,19 +21,29 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""Records search class and helpers."""
-
-from invenio_search.api import RecordsSearch
+"""B2Share access policies."""
 
 
-class B2ShareRecordsSearch(RecordsSearch):
-    """Search class for records."""
+from dateutil.parser import parse as dateutil_parse
+from datetime import datetime
 
-    class Meta:
-        """Default index and filter for record search."""
 
-        index = 'records'
+def allow_public_file_metadata(record_metadata):
+    '''Metadata about a record's files, i.e. file names can be
+        serialized or indexed if BOTH:
+            1. the record is open_access, and
+            2. the record embargo date (if any) has expired
+    '''
+    if record_metadata.get('open_access') is True:
+        if not is_under_embargo(record_metadata):
+            return True
+    return False
 
-    def __init__(self, **kwargs):
-        """Initialize instance."""
-        super(B2ShareRecordsSearch, self).__init__(**kwargs)
+
+def is_under_embargo(record_metadata):
+    embargo_date_string = record_metadata.get('embargo_date')
+    if not embargo_date_string:
+        # no embargo date set
+        return False
+    embargo_date = dateutil_parse(embargo_date_string)
+    return datetime.now() < embargo_date
