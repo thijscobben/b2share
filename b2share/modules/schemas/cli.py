@@ -280,7 +280,7 @@ def community_schema_list_block_schema_versions(verbose, community, version=None
 @click.option('-v','--verbose', is_flag=True, default=False)
 @click.argument('community')
 @click.argument('block_schema_id')
-@click.option('--version')    
+@click.option('--version')
 def community_schema_add_block_schema_version(verbose, community, block_schema_id, version=None):
     """Creates a new version of the community schema with this block_schema 
         added. If called for the first time, creates the community schema and 

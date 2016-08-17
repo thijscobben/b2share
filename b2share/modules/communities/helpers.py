@@ -30,7 +30,6 @@ def get_community_by_name_or_id(community):
         result = Community.get(id=community)
     except:
         try:
-            #TODO: case insensitivity?
             result = Community.get(name=community)
         except CommunityDoesNotExistError:
             pass
