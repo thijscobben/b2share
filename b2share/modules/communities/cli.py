@@ -25,6 +25,7 @@
 
 from __future__ import absolute_import
 
+import os
 from os.path import isfile
 
 import click
@@ -70,18 +71,11 @@ def create(verbose, name, description, logo):
             % name)
     except CommunityDoesNotExistError as e:
         pass
-    try:
-        community = Community.create_community(name=name, 
-            description=description, logo=logo)
-        db.session.commit()
-        if verbose:
-            click.echo("Community created with %d" % community.id)
-    except Exception as e1:
-        try:
-            db.session.rollback()
-        except Exception as e2:
-            raise click.ClickException(str(e2))
-        raise click.ClickException(str(e1))
+    community = Community.create_community(name=name, 
+        description=description, logo=logo)
+    db.session.commit()
+    if verbose:
+        click.echo("Community created with %d" % community.id)
         
 @communities.command()
 @with_appcontext
@@ -90,12 +84,12 @@ def list(verbose):
     """List all communities in this instances' database"""
     communities = Community.get_all()
     for c in communities:
-        click.echo("%s\t%s\t%s\t%s" % (c.name, c.id, c.description, c.logo))
+        click.echo("%s\t%s\t%s\t%s" % (c.name[0:15], c.id, c.description[0:31], c.logo))
 
 
 @communities.command()
 @with_appcontext
-@click.option('-v','--verbose',is_flag=True,default=False)
+@click.option('-v','--verbose', is_flag=True, default=False)
 @click.option('--name')
 @click.option('--description')
 @click.option('--logo')
