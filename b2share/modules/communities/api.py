@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EUDAT B2Share.
-# Copyright (C) 2016 University of Tuebingen, CERN.
+# Copyright (C) 2016 University of Tuebingen, CERN
 # Copyright (C) 2015 University of Tuebingen.
 #
 # B2Share is free software; you can redistribute it and/or
@@ -94,18 +94,13 @@ class Community(object):
     def get_all(cls, start=None, stop=None):
         """Searches for matching communities."""
         from .models import Community as CommunityMeta
-        if (start==None and stop==None):
+        if (start is None and stop is None):
             metadata = CommunityMeta.query.order_by(CommunityMeta.created)
-        elif (start and stop):
-            try:
-                start = int(start)
-                stop = int(stop)
-            except ValueError as e:
-                raise GetAllStartStopError("start and stop parameters must be numbers")
+        elif not(start is None) and not(stop is None):
             metadata = CommunityMeta.query.order_by(CommunityMeta.created).limit(stop)[start:]
         else:
             #one of them is None this cannot happen
-            raise GetAllStartStopError("Neither or both start and stop should be None")    
+            raise ValueError("Neither or both start and stop should be None")
         return [cls(md) for md in metadata]
 
     @classmethod

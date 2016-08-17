@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of EUDAT B2Share.
-# Copyright (C) 2016 University of Tuebingen, CERN.
-# Copyright (C) 2015 University of Tuebingen.
+# Copyright (C) 2016 University of Tuebingen, CERN, SurfSara
 #
 # B2Share is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -35,8 +34,6 @@ from invenio_db import db
 
 from .api import Community, CommunityDoesNotExistError
 
-#from .errors import RootSchemaAlreadyExistsError
-#from .helpers import load_root_schemas
 
 @click.group()
 def communities():
@@ -50,21 +47,32 @@ def communities():
 @click.argument('description')
 @click.argument('logo')
 def create(verbose, name, description, logo):
-    """Creating a community in the database. Name can be 255 characters long. Description is a text of maximally 1024 characters enclosed in parentheses. The logo parameter should be a valid path to a logo file. """
+    """Create a community in the database. Name can be 255 characters long.
+     Description is a text of maximally 1024 characters enclosed in 
+    parentheses. The logo parameter should be a valid path to a logo file
+    relative to B2SHARE_UI_PATH/img/communities directory """
     if len(name)>255:
-        raise click.BadParameter("NAME parameter is longer than the 255 character maximum")
+        raise click.BadParameter(""""NAME parameter is longer than the 255 
+        character maximum""")
     if len(description)>1024:
-        raise click.BadParameter("DESCRIPTION parameter is longer than the 1024 character maximum")
-    if not isfile(logo):
-        raise click.BadParameter("LOGO should be a (relative) path to an existing image file.")
+        raise click.BadParameter("""DESCRIPTION parameter is longer than the
+        1024 character maximum""")
+    if not isfile( os.path.join( 
+                os.environ.get('B2SHARE_UI_PATH'), 
+                'img/communities', logo)):
+        raise click.BadParameter(""""LOGO should be a (relative) path to an
+         existing image file under B2SHARE_UI_PATH/img/communities directory.
+         """)
     try:
-        community_exists = Community.get(name=name)
-        if community_exists:
-            raise click.BadParameter("There already is a community with name %s" % name)
+        Community.get(name=name)
+        #if it does not yield the CommunityDoesNotExistError then:
+        raise click.BadParameter("There already is a community with name %s" 
+            % name)
     except CommunityDoesNotExistError as e:
         pass
     try:
-        community = Community.create_community(name=name,description=description,logo=logo)
+        community = Community.create_community(name=name, 
+            description=description, logo=logo)
         db.session.commit()
         if verbose:
             click.echo("Community created with %d" % community.id)
@@ -91,24 +99,27 @@ def list(verbose):
 @click.option('--name')
 @click.option('--description')
 @click.option('--logo')
-@click.option('--clear_fields',is_flag=True,default=False,help='if set edit nullifies unspecified value options')
+@click.option('--clear_fields',is_flag=True,
+    default=False,help='if set edit nullifies unspecified value options')
 @click.argument('id')
 def edit(verbose, id, name, description, logo,clear_fields):
         """Edit data of the specified community."""
         try:
             community = Community.get(id=id)
         except:
-            #CommunityDoesNotExistError, ValueError, sqlalchemy.exc.StatementError
-            raise click.BadParameter("No community with id %s" % id)
+           raise click.BadParameter("No community with id %s" % id)
         if not(name or description or logo):
-            raise click.ClickException("At least one of name, description or id must be specified")
+            raise click.ClickException("""At least one of name, description or 
+            id must be specified""")
         data = {}
         if name:
             if not(name==community.name):
                 try:
                     Community.get(name=name)
                 except CommunityExistsError:
-                    raise click.BadParameterException("You are trying to change the name of the community but another community already exists with that name.")            
+                    raise click.BadParameterException("""You are trying to 
+                    change the name of the community but another community 
+                    already exists with that name.""")
             data['name']=name
         if description:
             data['description']=description
@@ -116,5 +127,7 @@ def edit(verbose, id, name, description, logo,clear_fields):
             data['logo']=logo
         updated_community = community.update(data, clear_fields)
         db.session.commit()
-        click.echo("Community %s updated: name= %s description=%s logo=%s" % (updated_community.id, updated_community.name, updated_community.description, updated_community.logo))
+        click.echo("Community %s updated: name= %s description=%s logo=%s" % 
+            (updated_community.id, updated_community.name, 
+            updated_community.description, updated_community.logo))
 
