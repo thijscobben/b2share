@@ -1,5 +1,4 @@
 {
-  "records" : {
     "mappings" : {
       "record" : {
         "properties" : {
@@ -104,4 +103,3 @@
       }
     }
   }
-}
