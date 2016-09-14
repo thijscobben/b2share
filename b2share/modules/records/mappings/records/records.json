@@ -1,6 +1,11 @@
 {
     "mappings" : {
       "record" : {
+		 "_all":{
+			"type":"string",
+			"index":"analyzed",
+			"analyzer":"english"
+		  },
         "properties" : {
           "$schema" : {
             "type" : "string"
@@ -73,10 +78,12 @@
             "type" : "string"
           },
           "description" : {
+			"index":"analyzed",
             "type" : "string",
 			"analyzer":"english"
           },
           "keywords" : {
+			"index":"analyzed",
             "type" : "string",
 			"analyzer":"english"
           },
@@ -96,6 +103,7 @@
             "type" : "string"
           },
           "title" : {
+			"index":"analyzed",
             "type" : "string",
 			"analyzer":"english"
           }
