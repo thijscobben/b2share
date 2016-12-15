@@ -298,6 +298,7 @@ def download_v1_data(token, target_dir, limit=None, verbose=False):
     Download the data from B2SHARE V1 records using token in to target_dir .
     """
     V1_URL_BASE = 'https://b2share.eudat.eu/api/'
+    V1_URL_BASE = 'https://test-eudatis.csc.fi/api/'
     url = "%srecords" % V1_URL_BASE
     params = {}
     params['access_token'] = token
@@ -467,14 +468,15 @@ def _process_record(rec):
         result['community']=str(community.id)
     else:
         raise Exception("Community not found for domain: `{}`".format(rec['domain']))
-
+    result['alternate_identifiers'] = [
+        {'alternate_identifier_type':'B2SHARE_V1_ID',
+        'alternate_identifier': str(rec['record_id'])}
+    ] 
     if 'PID' in rec.keys():
-        result['alternate_identifiers'] = [
+        result['alternate_identifiers'].append(
             {'alternate_identifier_type':'ePIC_PID',
             'alternate_identifier': rec['PID']}
-            , {'alternate_identifier_type':'B2SHARE_V1_ID',
-            'alternate_identifier': str(rec['record_id'])}
-        ]
+        )
     if 'resource_type' in rec.keys():
         translate = {
             'Audio': 'Audiovisual',
