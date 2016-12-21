@@ -57,6 +57,7 @@ ADD ./webui/copy_files.sh b2share/webui/copy_files.sh
 
 WORKDIR /eudat/b2share/webui
 RUN npm install --unsafe-perm
+CMD["/eudat/b2share/webui/copy_files.sh"]
 
 #
 # UWSGI Config
