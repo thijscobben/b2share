@@ -64,6 +64,7 @@ class RemoteList(ContentNegotiatedMethodView):
         )
 
     def put(self, service):
+        current_app.logger.error("In PUT method")
         if service == 'b2drop':
             auth = request.get_json()
             config = current_app.config.get('B2DROP_SERVER')
