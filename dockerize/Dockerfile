@@ -13,7 +13,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py
 RUN python3.4 get-pip.py
 RUN pip3 install --upgrade pip
 
-RUN git clone https://github.com/EUDAT-B2SHARE/b2share.git --branch evolution
+RUN git clone https://github.com/thijscobben/b2share.git --branch fixb2drop
 ADD . b2share
 
 ENV LANG=en_US.UTF-8
