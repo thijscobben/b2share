@@ -64,7 +64,6 @@ class RemoteList(ContentNegotiatedMethodView):
         )
 
     def put(self, service):
-        import pdb; pdb.set_trace();
         if service == 'b2drop':
             auth = request.get_json()
             config = current_app.config.get('B2DROP_SERVER')
@@ -118,6 +117,7 @@ class Jobs(ContentNegotiatedMethodView):
 
     def post(self):
         json = request.json
+        current_app.logger.error("TESTING")
         source_remote_url = json.get('source_remote_url')
         destination_file_url = json.get('destination_file_url')
 
